@@ -77,6 +77,7 @@ public class DefaultDriveCommand extends TccCommandBase {
             double speed = 0, turn = 0;
 
             switch (driveMode) {
+
             case ARCADE:
                 speed = operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.Y);
                 turn = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.X);
@@ -91,6 +92,9 @@ public class DefaultDriveCommand extends TccCommandBase {
                 speed = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.Y);
                 turn = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.X);
                 break;
+
+            default:
+                break;
             }
 
             speed *= driveScalingFactor;
@@ -99,9 +103,9 @@ public class DefaultDriveCommand extends TccCommandBase {
             double turnAdjustmentPerSide = turn / 2.0;
 
             // When turning, keep the differential between the left and right while
-            // maximizing the speed. The maximum speed for any side is 1.0.
-            if (Math.abs(speed) + Math.abs(turnAdjustmentPerSide) > 1.0) {
-                speed = (1.0 - Math.abs(turnAdjustmentPerSide)) * Math.signum(speed);
+            // maximizing the speed. The maximum speed for any side is the driveScalingFactor
+            if (Math.abs(speed) + Math.abs(turnAdjustmentPerSide) > driveScalingFactor) {
+                speed = (driveScalingFactor - Math.abs(turnAdjustmentPerSide)) * Math.signum(speed);
             }
 
             leftSpeed  = speed + turnAdjustmentPerSide;
