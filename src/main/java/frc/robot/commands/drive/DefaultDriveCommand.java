@@ -2,7 +2,8 @@ package frc.robot.commands.drive;
 
 import com.torontoCodingCollective.TccCommandBase;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.DriveConstants.DriveMode;
 import frc.robot.OperatorInput;
 import frc.robot.OperatorInput.Axis;
 import frc.robot.OperatorInput.Stick;
@@ -11,7 +12,7 @@ import frc.robot.subsystems.DriveSubsystem;
 public class DefaultDriveCommand extends TccCommandBase {
 
     private final DriveSubsystem driveSubsystem;
-    private final OperatorInput  driverController;
+    private final OperatorInput  operatorInput;
 
     /**
      * Creates a new ExampleCommand.
@@ -20,8 +21,8 @@ public class DefaultDriveCommand extends TccCommandBase {
      */
     public DefaultDriveCommand(OperatorInput operatorInput, DriveSubsystem driveSubsystem) {
 
-        this.driverController = operatorInput;
-        this.driveSubsystem   = driveSubsystem;
+        this.operatorInput  = operatorInput;
+        this.driveSubsystem = driveSubsystem;
 
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(driveSubsystem);
@@ -35,76 +36,78 @@ public class DefaultDriveCommand extends TccCommandBase {
     @Override
     public void execute() {
 
-        // forwards/backwards speed
-        double       speed   = driverController.getDriverControllerAxis(Stick.LEFT, Axis.Y);
-        // turn speed
-        final double rawTurn = driverController.getDriverControllerAxis(Stick.RIGHT, Axis.X);
+        // Get the selected drive mode
+        DriveMode driveMode          = operatorInput.getSelectedDriveMode();
 
-        SmartDashboard.putNumber("Operator Speed", speed);
-        SmartDashboard.putNumber("Operator Turn", rawTurn);
+        // Calculate the drive scaling factor based on the boost mode and the slow mode.
+        double    driveScalingFactor = DriveConstants.DRIVE_SCALING_NORMAL;
 
-        double  turn      = rawTurn / 2;
-        boolean boost     = driverController.isBoost();
-        boolean slow      = driverController.isSlowDown();
-
-        double  leftSpeed = 0, rightSpeed = 0;
-
-        if (slow) {
-            speed = speed / 5;
-            turn  = turn / 2.5; // Turn was already divided by 2 above
+        if (operatorInput.isBoost()) {
+            driveScalingFactor = DriveConstants.DRIVE_SCALING_BOOST;
+        }
+        if (operatorInput.isSlowDown()) {
+            driveScalingFactor = DriveConstants.DRIVE_SCALING_SLOW;
         }
 
-        else if (!boost) {
-            speed = speed / 2;
-        }
+        double leftSpeed = 0, rightSpeed = 0;
 
-        else {
-            speed = Math.signum(speed);
-        }
+        // If this is a tank drive robot, then the left and right speeds are set from the
+        // joystick values.
+        if (driveMode == DriveMode.TANK) {
 
-        if (speed < 0) {
-            turn = -turn;
-        }
+            leftSpeed  = operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.Y) * driveScalingFactor;
+            rightSpeed = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.Y) * driveScalingFactor;
 
-        if (speed == 0) {
-            leftSpeed  = turn;
-            rightSpeed = -turn;
-        }
-        else if (boost) {
-
-            // Turning left
-            if (rawTurn < 0) {
-
-                // If boosted and at full speed, and the
-                // turn is limited to 0.5, then the max turn
-                // that can be achieved is 1.0 vs 0.5.
-                leftSpeed  = speed + turn;
-                rightSpeed = speed;
-            }
-            // Turning right
-            else if (rawTurn > 0) {
-                leftSpeed  = speed;
-                rightSpeed = speed - turn;
-            }
-            else {
-                leftSpeed  = speed;
-                rightSpeed = speed;
+            // The max differential between the left and right should not exceed the scaling factor
+            if (Math.abs(leftSpeed - rightSpeed) > driveScalingFactor) {
+                double avgSpeed = (leftSpeed + rightSpeed) / 2.0d;
+                if (leftSpeed < avgSpeed) {
+                    leftSpeed  = avgSpeed - (0.5 * driveScalingFactor);
+                    rightSpeed = avgSpeed + (0.5 * driveScalingFactor);
+                }
+                else {
+                    leftSpeed  = avgSpeed + (0.5 * driveScalingFactor);
+                    rightSpeed = avgSpeed - (0.5 * driveScalingFactor);
+                }
             }
         }
         else {
-            if (rawTurn < 0) {
-                leftSpeed  = speed;
-                rightSpeed = speed - turn;
+            // One of the arcade style drive modes.
+
+            double speed = 0, turn = 0;
+
+            switch (driveMode) {
+            case ARCADE:
+                speed = operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.Y);
+                turn = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.X);
+                break;
+
+            case SINGLE_STICK_LEFT:
+                speed = operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.Y);
+                turn = operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.X);
+                break;
+
+            case SINGLE_STICK_RIGHT:
+                speed = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.Y);
+                turn = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.X);
+                break;
             }
-            else if (rawTurn > 0) {
-                leftSpeed  = speed + turn;
-                rightSpeed = speed;
+
+            speed *= driveScalingFactor;
+            turn  *= driveScalingFactor;
+
+            double turnAdjustmentPerSide = turn / 2.0;
+
+            // When turning, keep the differential between the left and right while
+            // maximizing the speed. The maximum speed for any side is 1.0.
+            if (Math.abs(speed) + Math.abs(turnAdjustmentPerSide) > 1.0) {
+                speed = (1.0 - Math.abs(turnAdjustmentPerSide)) * Math.signum(speed);
             }
-            else {
-                rightSpeed = speed;
-                leftSpeed  = speed;
-            }
+
+            leftSpeed  = speed + turnAdjustmentPerSide;
+            rightSpeed = speed - turnAdjustmentPerSide;
         }
+
         driveSubsystem.setMotorSpeeds(leftSpeed, rightSpeed);
     }
 

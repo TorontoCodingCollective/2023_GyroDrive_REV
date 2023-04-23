@@ -51,6 +51,10 @@ public final class Constants {
 
         /** Proportional gain for gyro pid tracking */
         public static final double  GYRO_PID_KP          = 0;
+
+        public static final double  DRIVE_SCALING_BOOST  = 1;
+        public static final double  DRIVE_SCALING_NORMAL = .6;
+        public static final double  DRIVE_SCALING_SLOW   = .3;
     }
 
 }

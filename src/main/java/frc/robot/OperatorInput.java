@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.AutoConstants.AutoPattern;
+import frc.robot.Constants.DriveConstants.DriveMode;
 import frc.robot.commands.CancelCommand;
 import frc.robot.commands.drive.DriveOnHeadingCommand;
 import frc.robot.subsystems.DriveSubsystem;
@@ -34,6 +35,7 @@ public class OperatorInput extends SubsystemBase {
     // Auto Setup Choosers
     SendableChooser<AutoPattern>    autoPatternChooser = new SendableChooser<>();
     SendableChooser<Integer>        waitTimeChooser    = new SendableChooser<>();
+    SendableChooser<DriveMode>      driveModeChooser   = new SendableChooser<>();
 
     /**
      * Construct an OperatorInput class that is fed by a DriverController and an OperatorController.
@@ -56,6 +58,12 @@ public class OperatorInput extends SubsystemBase {
         waitTimeChooser.addOption("1 second", 1);
         waitTimeChooser.addOption("3 seconds", 3);
         waitTimeChooser.addOption("5 seconds", 5);
+
+        driveModeChooser.setDefaultOption("Arcade", DriveMode.ARCADE);
+        SmartDashboard.putData("Drive Mode", driveModeChooser);
+        driveModeChooser.addOption("Tank", DriveMode.TANK);
+        driveModeChooser.addOption("Single Stick (L)", DriveMode.SINGLE_STICK_LEFT);
+        driveModeChooser.addOption("Single Stick (R)", DriveMode.SINGLE_STICK_RIGHT);
     }
 
     /**
@@ -144,6 +152,15 @@ public class OperatorInput extends SubsystemBase {
     }
 
     /**
+     * Get the selected drive mode
+     *
+     * @return DriveMode
+     */
+    public DriveMode getSelectedDriveMode() {
+        return driveModeChooser.getSelected();
+    }
+
+    /**
      * Get the Auto wait time
      * <p>
      * The robot will wait this amount of time before starting auto
@@ -161,7 +178,7 @@ public class OperatorInput extends SubsystemBase {
     }
 
     /*
-     * Support for haptic feedback
+     * Support for haptic feedback to the driver
      */
     public void startVibrate() {
         driverController.setRumble(GenericHID.RumbleType.kBothRumble, 1);
