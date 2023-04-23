@@ -4,11 +4,8 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.Constants.AutoConstants.AutoPattern;
 import frc.robot.Constants.OperatorInputConstants;
 import frc.robot.commands.auto.DriveForwardAutoCommand;
 import frc.robot.commands.drive.DefaultDriveCommand;
@@ -23,13 +20,10 @@ import frc.robot.subsystems.DriveSubsystem;
 public class RobotContainer {
 
     // Subsystems
-    private final DriveSubsystem driveSubsystem     = new DriveSubsystem();
-
-    // Auto Setup Choosers
-    SendableChooser<AutoPattern> autoPatternChooser = new SendableChooser<>();
+    private final DriveSubsystem driveSubsystem = new DriveSubsystem();
 
     // Driver and operator controllers
-    private final OperatorInput  operatorInput      = new OperatorInput(
+    private final OperatorInput  operatorInput  = new OperatorInput(
         OperatorInputConstants.DRIVER_CONTROLLER_PORT,
         OperatorInputConstants.OPERATOR_CONTROLLER_PORT);
 
@@ -41,19 +35,8 @@ public class RobotContainer {
         driveSubsystem.setDefaultCommand(
             new DefaultDriveCommand(operatorInput, driveSubsystem));
 
-        // Initialize the autonomous choosers
-        initAutoSelectors();
-
         // Configure the button bindings
         operatorInput.configureButtonBindings(driveSubsystem);
-
-    }
-
-    private void initAutoSelectors() {
-
-        autoPatternChooser.setDefaultOption("Do Nothing", AutoPattern.DO_NOTHING);
-        SmartDashboard.putData("Auto Pattern", autoPatternChooser);
-        autoPatternChooser.addOption("Drive Forward", AutoPattern.DRIVE_FORWARD);
 
     }
 
@@ -64,7 +47,7 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
 
-        switch (autoPatternChooser.getSelected()) {
+        switch (operatorInput.getSelectedAuto()) {
 
         case DRIVE_FORWARD:
             return new DriveForwardAutoCommand(

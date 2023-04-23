@@ -11,9 +11,11 @@ public class DriveForwardAutoCommand extends SequentialCommandGroup {
 
     public DriveForwardAutoCommand(DriveSubsystem driveSubsystem) {
 
-        StringBuilder sb = new StringBuilder("Auto Selections: ");
-        sb.append("Pattern: Drive Forward Auto Pattern");
-        System.out.println(sb.toString());
+        System.out.println("Auto Pattern: Drive Forward");
+
+        // Resolve the wait time before starting auto
+        // The wait time here is inserted as an example of how to use multiple
+        // selectors on the Shuffleboard Dashboard
 
         // Set the gyro angle to zero
         // use an Instant command to call the method in the subsystem
