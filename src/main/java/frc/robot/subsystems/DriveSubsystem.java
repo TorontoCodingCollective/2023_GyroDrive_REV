@@ -14,6 +14,35 @@ import frc.robot.Constants.DriveConstants;
 
 public class DriveSubsystem extends SubsystemBase {
 
+    /**
+     * NavX - AHRS
+     *
+     * This local NavXGryro is used to override the value in the gyro dashboard sendable to use
+     * {@link AHRS#getAngle} which includes any offset, instead of the {@link AHRS#getYaw()} which
+     * is the raw yaw value without the offset.
+     * <p>
+     * Using the getAngle() method makes the gyro appear in the correct position on the dashboard accounting
+     * for the offset.
+     */
+    private class NavXGyro extends AHRS {
+        @Override
+        public void initSendable(SendableBuilder builder) {
+            builder.setSmartDashboardType("Gyro");
+            builder.addDoubleProperty("Value",
+                () -> {
+                    double angle = super.getAngle();
+                    // Print the angle in the range 0-360;
+                    angle %= 360;
+                    if (angle < 0) {
+                        angle += 360;
+                    }
+                    // Round the angle to 2 decimal places for the Dashboard
+                    return Math.round(angle * 100d) / 100d;
+                },
+                null);
+        }
+    }
+
     // The motors on the left side of the drive.
     private final CANSparkMax     leftPrimaryMotor   = new CANSparkMax(DriveConstants.LEFT_MOTOR_PORT,
         MotorType.kBrushless);
@@ -41,24 +70,7 @@ public class DriveSubsystem extends SubsystemBase {
     /*
      * Gyro
      */
-    private AHRS                  navXGyro           = new AHRS() {
-                                                         // Override the "Value" in the gyro
-                                                         // sendable to use the angle instead
-                                                         // of
-                                                         // the yaw.
-                                                         // Using the angle makes the gyro
-                                                         // appear
-                                                         // in the correct position accounting
-                                                         // for the
-                                                         // offset. The yaw is the raw sensor
-                                                         // value which appears incorrectly on
-                                                         // the dashboard.
-                                                         @Override
-                                                         public void initSendable(SendableBuilder builder) {
-                                                             builder.setSmartDashboardType("Gyro");
-                                                             builder.addDoubleProperty("Value", this::getAngle, null);
-                                                         }
-                                                     };
+    private AHRS                  navXGyro           = new NavXGyro();
 
     private double                gyroHeadingOffset  = 0;
     private double                gyroPitchOffset    = 0;
@@ -178,6 +190,23 @@ public class DriveSubsystem extends SubsystemBase {
         return Math.round(heading * 100) / 100d;
     }
 
+    private double getRawGyroAngle(GyroAxis gyroAxis) {
+
+        switch (gyroAxis) {
+        case YAW:
+            return navXGyro.getYaw();
+        case PITCH:
+            // Pitch and roll are reversed
+            // in the vertical mounting of the rio with
+            // the RIO facing the side of the robot
+            return navXGyro.getRoll();
+        case ROLL:
+            return navXGyro.getPitch();
+        default:
+            return 0;
+        }
+    }
+
     /**
      * Get the error between the current heading and the requested heading in the
      * range -180 to +180 degrees.
@@ -206,22 +235,6 @@ public class DriveSubsystem extends SubsystemBase {
         return error;
     }
 
-    private double getRawGyroAngle(GyroAxis gyroAxis) {
-
-        switch (gyroAxis) {
-        case YAW:
-            return navXGyro.getYaw();
-        case PITCH:
-            // Pitch and roll are reversed
-            // in the vertical mounting of the rio
-            return navXGyro.getRoll();
-        case ROLL:
-            return navXGyro.getPitch();
-        default:
-            return 0;
-        }
-    }
-
     public double getPitch() {
 
         double gyroPitch = getRawGyroAngle(GyroAxis.PITCH);
@@ -230,8 +243,7 @@ public class DriveSubsystem extends SubsystemBase {
         // pitch was last set.
         gyroPitch += gyroPitchOffset;
 
-        // Round to two decimals
-        return Math.round(gyroPitch * 100) / 100d;
+        return gyroPitch;
     }
 
     /**
@@ -329,7 +341,7 @@ public class DriveSubsystem extends SubsystemBase {
 
         SmartDashboard.putData("Gyro", navXGyro);
         SmartDashboard.putNumber("Gyro Heading", getHeading());
-        SmartDashboard.putNumber("Gyro Pitch", getPitch());
+        SmartDashboard.putNumber("Gyro Pitch", Math.round(getPitch() * 100d) / 100d);
 
         // SmartDashboard.putNumber("Gyro Raw Yaw", getRawGyroAngle(GyroAxis.YAW));
         // SmartDashboard.putNumber("Gyro Raw Pitch", getRawGyroAngle(GyroAxis.PITCH));
@@ -342,9 +354,9 @@ public class DriveSubsystem extends SubsystemBase {
         StringBuilder sb = new StringBuilder();
 
         sb.append(this.getClass().getSimpleName()).append(" : ")
-            .append("Head ").append(getHeading())
+            .append("Heading ").append(getHeading())
             .append(", Pitch ").append(getPitch())
-            .append(", Drive dist ").append(Math.round(getEncoderDistanceCm() * 10) / 10d);
+            .append(", Drive dist ").append(Math.round(getEncoderDistanceCm() * 10) / 10d).append("cm");
 
         return sb.toString();
     }
