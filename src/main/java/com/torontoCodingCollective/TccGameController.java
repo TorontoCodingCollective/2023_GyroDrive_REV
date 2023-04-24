@@ -12,24 +12,24 @@ import edu.wpi.first.wpilibj.XboxController;
  * when the operators are not touching the controls.
  * <p>
  * Since the TccGameController overrides the {@link XboxController#getRawAxis} method,
- * an additional method {#link {@link #getHardwareAxisValue} is provided to retrieve
+ * an additional method {@link #getHardwareAxisValue} is provided to retrieve
  * the underlying hardware values
  */
 public class TccGameController extends XboxController {
 
-    public static final double DEFAULT_AXIS_DEADBAND = .2;
+    public static final double DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND = .2;
 
-    private double             axisDeadband          = DEFAULT_AXIS_DEADBAND;
+    private double             axisDeadband                          = DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND;
 
     /**
      * Construct a TorontoCodingCollectiveGameController on the specified port
      * <p>
-     * Uses the {{@link #DEFAULT_AXIS_DEADBAND} as the joystick deadband
+     * Uses the {{@link #DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND} as the joystick deadband
      *
      * @param port on the driver station which the joystick is plugged into
      */
     public TccGameController(int port) {
-        this(port, DEFAULT_AXIS_DEADBAND);
+        this(port, DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND);
     }
 
     /**
@@ -40,15 +40,15 @@ public class TccGameController extends XboxController {
      * axis value from the hardware is less than the specified value, then the axis will return
      * zero. Setting the axisDeadbanding to zero turns off all deadbanding.
      * Values < 0 or > 0.4 are ignored, and
-     * the {@link #DEFAULT_AXIS_DEADBAND} value is used.
+     * the {@link #DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND} value is used.
      */
     public TccGameController(int port, final double axisDeadband) {
         super(port);
 
         if (axisDeadband < 0 || axisDeadband > 0.4) {
             System.out.println("Invalid axis deadband(" + axisDeadband + ") must be between 0 - 0.4. Overriding value to "
-                + DEFAULT_AXIS_DEADBAND);
-            setAxisDeadband(DEFAULT_AXIS_DEADBAND);
+                + DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND);
+            setAxisDeadband(DEFAULT_GAME_CONTROLLER_AXIS_DEADBAND);
         }
         else {
             setAxisDeadband(axisDeadband);
@@ -92,8 +92,7 @@ public class TccGameController extends XboxController {
             axisValue  = value;
         }
 
-        // The Y axis values should be inverted in order to make North (away
-        // from the driver) positive.
+        // The Y axis values should be inverted in order to make the direction away from the driver positive.
         if (axis == XboxController.Axis.kLeftY.value || axis == XboxController.Axis.kRightY.value) {
             axisValue *= -1.0;
         }
@@ -155,12 +154,31 @@ public class TccGameController extends XboxController {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append('(').append(Math.round(getLeftX() * 100d) / 100d).append(',').append(Math.round(getLeftY())).append(')')
-            .append('(').append(Math.round(getRightX() * 100d) / 100d).append(',').append(Math.round(getRightY())).append(')')
-            .append('[').append(Math.round(getLeftTriggerAxis() * 100d) / 100d).append(',')
-            .append(Math.round(getRightTriggerAxis())).append(']')
-            .append(' ');
+        /*
+         * Axis
+         */
+        // Left stick
+        sb.append('(').append(Math.round(getLeftX() * 100d) / 100d).append(',')
+            .append(Math.round(getLeftY() * 100d) / 100d).append(')');
 
+        // Right stick
+        sb.append('(').append(Math.round(getRightX() * 100d) / 100d).append(',')
+            .append(Math.round(getRightY() * 100d) / 100d).append(')');
+
+        // Triggers
+        sb.append('[').append(Math.round(getLeftTriggerAxis() * 100d) / 100d).append(',')
+            .append(Math.round(getRightTriggerAxis() * 100d) / 100d).append("] ");
+
+        /*
+         * POV
+         */
+        if (getPOV() >= 0) {
+            sb.append("POV(").append(getPOV()).append(") ");
+        }
+
+        /*
+         * Buttons
+         */
         if (getLeftBumper()) {
             sb.append("LB ");
         }
@@ -185,9 +203,11 @@ public class TccGameController extends XboxController {
         if (getBackButton()) {
             sb.append("Start ");
         }
-
-        if (getPOV() >= 0) {
-            sb.append("POV(").append(getPOV()).append(')');
+        if (getLeftStickButtonPressed()) {
+            sb.append("LStick ");
+        }
+        if (getRightStickButtonPressed()) {
+            sb.append("RStick ");
         }
 
         return sb.toString();
