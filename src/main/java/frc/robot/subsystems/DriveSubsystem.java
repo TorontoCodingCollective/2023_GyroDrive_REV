@@ -18,7 +18,7 @@ public class DriveSubsystem extends SubsystemBase {
      * NavX - AHRS
      *
      * This local NavXGryro is used to override the value in the gyro dashboard sendable to use
-     * {@link AHRS#getAngle} which includes any offset, instead of the {@link AHRS#getYaw()} which
+     * {@link AHRS#getAngle()} which includes any offset, instead of the {@link AHRS#getYaw()} which
      * is the raw yaw value without the offset.
      * <p>
      * Using the getAngle() method makes the gyro appear in the correct position on the dashboard accounting
@@ -112,6 +112,7 @@ public class DriveSubsystem extends SubsystemBase {
     public void calibrateGyro() {
 
         gyroHeadingOffset = 0;
+        gyroPitchOffset   = 0;
 
         navXGyro.calibrate();
     }
