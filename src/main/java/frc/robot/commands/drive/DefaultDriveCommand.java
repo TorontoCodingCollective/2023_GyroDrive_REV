@@ -121,16 +121,16 @@ public class DefaultDriveCommand extends TccCommandBase {
      * over small turns while moving forward.
      * <p>
      *
-     * @param leftStickValue
-     * @param rightStickValue
+     * @param leftStick value
+     * @param rightStick value
      * @param driveScalingFactor
      * @return DriveSpeed object containing the left and right motor speeds to apply to the motors.
      */
-    private DriveSpeed calcDriveSpeed_Tank(double leftStickValue, double rightStickValue, double driveScalingFactor) {
+    private DriveSpeed calcDriveSpeed_Tank(double leftStick, double rightStick, double driveScalingFactor) {
 
         // Translate to arcade drive, and call the arcade command
-        double speed = (leftStickValue + rightStickValue) / 2.0d;
-        double turn  = (leftStickValue - rightStickValue) / 2.0d;
+        double speed = (leftStick + rightStick) / 2.0d;
+        double turn  = (leftStick - rightStick) / 2.0d;
 
         return calcDriveSpeed_Arcade(speed, turn, driveScalingFactor);
     }
