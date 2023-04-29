@@ -48,22 +48,7 @@ public class OperatorInput extends SubsystemBase {
         driverController   = new TccGameController(driverControllerPort);
         operatorController = new TccGameController(operatorControllerPort);
 
-        // Initialize the dashboard selectors
-        autoPatternChooser.setDefaultOption("Do Nothing", AutoPattern.DO_NOTHING);
-        SmartDashboard.putData("Auto Pattern", autoPatternChooser);
-        autoPatternChooser.addOption("Drive Forward", AutoPattern.DRIVE_FORWARD);
-
-        waitTimeChooser.setDefaultOption("No wait", 0);
-        SmartDashboard.putData("Auto Wait Time", waitTimeChooser);
-        waitTimeChooser.addOption("1 second", 1);
-        waitTimeChooser.addOption("3 seconds", 3);
-        waitTimeChooser.addOption("5 seconds", 5);
-
-        driveModeChooser.setDefaultOption("Arcade", DriveMode.ARCADE);
-        SmartDashboard.putData("Drive Mode", driveModeChooser);
-        driveModeChooser.addOption("Tank", DriveMode.TANK);
-        driveModeChooser.addOption("Single Stick (L)", DriveMode.SINGLE_STICK_LEFT);
-        driveModeChooser.addOption("Single Stick (R)", DriveMode.SINGLE_STICK_RIGHT);
+        initializeDashboardSelectors();
     }
 
     /**
@@ -187,4 +172,26 @@ public class OperatorInput extends SubsystemBase {
     public void stopVibrate() {
         driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0);
     }
+
+    private void initializeDashboardSelectors() {
+
+        // Initialize the dashboard selectors
+        autoPatternChooser.setDefaultOption("Do Nothing", AutoPattern.DO_NOTHING);
+        SmartDashboard.putData("Auto Pattern", autoPatternChooser);
+        autoPatternChooser.addOption("Drive Forward", AutoPattern.DRIVE_FORWARD);
+
+        waitTimeChooser.setDefaultOption("No wait", 0);
+        SmartDashboard.putData("Auto Wait Time", waitTimeChooser);
+        waitTimeChooser.addOption("1 second", 1);
+        waitTimeChooser.addOption("3 seconds", 3);
+        waitTimeChooser.addOption("5 seconds", 5);
+
+        driveModeChooser.setDefaultOption("Arcade", DriveMode.ARCADE);
+        SmartDashboard.putData("Drive Mode", driveModeChooser);
+        driveModeChooser.addOption("Tank", DriveMode.TANK);
+        driveModeChooser.addOption("Single Stick (L)", DriveMode.SINGLE_STICK_LEFT);
+        driveModeChooser.addOption("Single Stick (R)", DriveMode.SINGLE_STICK_RIGHT);
+    }
+
+
 }

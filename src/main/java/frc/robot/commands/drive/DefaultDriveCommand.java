@@ -98,7 +98,7 @@ public class DefaultDriveCommand extends TccCommandBase {
             }
 
             speed *= driveScalingFactor;
-            turn  *= driveScalingFactor;
+            turn  *= driveScalingFactor / 2.0;
 
             double turnAdjustmentPerSide = turn / 2.0;
 

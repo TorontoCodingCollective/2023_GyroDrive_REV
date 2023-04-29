@@ -35,7 +35,7 @@ public class RobotContainer {
         driveSubsystem.setDefaultCommand(
             new DefaultDriveCommand(operatorInput, driveSubsystem));
 
-        // Configure the button bindings
+        // Configure the button bindings - pass in all subsystems
         operatorInput.configureButtonBindings(driveSubsystem);
 
     }
@@ -48,6 +48,9 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
 
         switch (operatorInput.getSelectedAuto()) {
+
+        case DO_NOTHING:
+            return new InstantCommand();
 
         case DRIVE_FORWARD:
             return new DriveForwardAutoCommand(
