@@ -147,6 +147,9 @@ public class DefaultDriveCommand extends TccCommandBase {
     private DriveSpeed calcDriveSpeed_Arcade(double speed, double turn, double driveScalingFactor) {
 
         speed *= driveScalingFactor;
+
+        // Slow the turn by half in order to make the robot more controllable, and to
+        // limit the max spin-on-the-spot speed.
         turn  *= driveScalingFactor / 2.0;
 
         double turnAdjustmentPerSide = turn / 2.0;
