@@ -11,6 +11,16 @@ import frc.robot.subsystems.DriveSubsystem;
 
 public class DefaultDriveCommand extends TccCommandBase {
 
+    private class DriveSpeed {
+
+        double left, right;
+
+        private DriveSpeed(double left, double right) {
+            this.left  = left;
+            this.right = right;
+        }
+    }
+
     private final DriveSubsystem driveSubsystem;
     private final OperatorInput  operatorInput;
 
@@ -49,27 +59,17 @@ public class DefaultDriveCommand extends TccCommandBase {
             driveScalingFactor = DriveConstants.DRIVE_SCALING_SLOW;
         }
 
-        double leftSpeed = 0, rightSpeed = 0;
+        DriveSpeed driveSpeed = null;
 
         // If this is a tank drive robot, then the left and right speeds are set from the
         // joystick values.
         if (driveMode == DriveMode.TANK) {
 
-            leftSpeed  = operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.Y) * driveScalingFactor;
-            rightSpeed = operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.Y) * driveScalingFactor;
+            driveSpeed = calcDriveSpeed_Tank(
+                operatorInput.getDriverControllerAxis(Stick.LEFT, Axis.Y),
+                operatorInput.getDriverControllerAxis(Stick.RIGHT, Axis.Y),
+                driveScalingFactor);
 
-            // The max differential between the left and right should not exceed the scaling factor
-            if (Math.abs(leftSpeed - rightSpeed) > driveScalingFactor) {
-                double avgSpeed = (leftSpeed + rightSpeed) / 2.0d;
-                if (leftSpeed < avgSpeed) {
-                    leftSpeed  = avgSpeed - (0.5 * driveScalingFactor);
-                    rightSpeed = avgSpeed + (0.5 * driveScalingFactor);
-                }
-                else {
-                    leftSpeed  = avgSpeed + (0.5 * driveScalingFactor);
-                    rightSpeed = avgSpeed - (0.5 * driveScalingFactor);
-                }
-            }
         }
         else {
             // One of the arcade style drive modes.
@@ -97,22 +97,11 @@ public class DefaultDriveCommand extends TccCommandBase {
                 break;
             }
 
-            speed *= driveScalingFactor;
-            turn  *= driveScalingFactor / 2.0;
+            driveSpeed = calcDriveSpeed_Arcade(speed, turn, driveScalingFactor);
 
-            double turnAdjustmentPerSide = turn / 2.0;
-
-            // When turning, keep the differential between the left and right while
-            // maximizing the speed. The maximum speed for any side is the driveScalingFactor
-            if (Math.abs(speed) + Math.abs(turnAdjustmentPerSide) > driveScalingFactor) {
-                speed = (driveScalingFactor - Math.abs(turnAdjustmentPerSide)) * Math.signum(speed);
-            }
-
-            leftSpeed  = speed + turnAdjustmentPerSide;
-            rightSpeed = speed - turnAdjustmentPerSide;
         }
 
-        driveSubsystem.setMotorSpeeds(leftSpeed, rightSpeed);
+        driveSubsystem.setMotorSpeeds(driveSpeed.left, driveSpeed.right);
     }
 
     @Override
@@ -124,6 +113,51 @@ public class DefaultDriveCommand extends TccCommandBase {
     public void end(boolean interrupted) {
 
         logCommandEnd(interrupted);
-        driveSubsystem.setMotorSpeeds(0, 0);
     }
+
+    /**
+     * Calculate the scaled tank drive speeds from the passed in values. In tank mode, the differential between
+     * the left and right sides should not exceed the drive forward speed. This will provide some greater control
+     * over small turns while moving forward.
+     * <p>
+     *
+     * @param leftStickValue
+     * @param rightStickValue
+     * @param driveScalingFactor
+     * @return DriveSpeed object containing the left and right motor speeds to apply to the motors.
+     */
+    private DriveSpeed calcDriveSpeed_Tank(double leftStickValue, double rightStickValue, double driveScalingFactor) {
+
+        // Translate to arcade drive, and call the arcade command
+        double speed = (leftStickValue + rightStickValue) / 2.0d;
+        double turn  = (leftStickValue - rightStickValue) / 2.0d;
+
+        return calcDriveSpeed_Arcade(speed, turn, driveScalingFactor);
+    }
+
+    /**
+     * Calculate the scaled arcade drive speeds from the passed in values. In arcade mode, the turn
+     * is cut in half to help control the robot more consistently.
+     *
+     * @param speed
+     * @param turn
+     * @param driveScalingFactor
+     * @return DriveSpeed object containing the left and right motor speeds to apply to the motors.
+     */
+    private DriveSpeed calcDriveSpeed_Arcade(double speed, double turn, double driveScalingFactor) {
+
+        speed *= driveScalingFactor;
+        turn  *= driveScalingFactor / 2.0;
+
+        double turnAdjustmentPerSide = turn / 2.0;
+
+        // When turning, keep the differential between the left and right while
+        // maximizing the speed. The maximum speed for any side is the driveScalingFactor
+        if (Math.abs(speed) + Math.abs(turnAdjustmentPerSide) > driveScalingFactor) {
+            speed = (driveScalingFactor - Math.abs(turnAdjustmentPerSide)) * Math.signum(speed);
+        }
+
+        return new DriveSpeed(speed + turnAdjustmentPerSide, speed - turnAdjustmentPerSide);
+    }
+
 }
