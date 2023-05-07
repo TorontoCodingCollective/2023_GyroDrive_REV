@@ -7,9 +7,9 @@ import frc.robot.commands.drive.DriveOnHeadingCommand;
 import frc.robot.subsystems.DriveSubsystem;
 
 
-public class DriveForwardAutoCommand extends SequentialCommandGroup {
+public class AutoCommand_DriveForward extends SequentialCommandGroup {
 
-    public DriveForwardAutoCommand(DriveSubsystem driveSubsystem) {
+    public AutoCommand_DriveForward(double waitTime, DriveSubsystem driveSubsystem) {
 
         System.out.println("Auto Pattern: Drive Forward");
 
@@ -24,7 +24,7 @@ public class DriveForwardAutoCommand extends SequentialCommandGroup {
         }));
 
         // Wait the selected number of seconds
-        addCommands(new WaitCommand(1));
+        addCommands(new WaitCommand(waitTime));
 
         // DriveForward
         addCommands(new DriveOnHeadingCommand(0, .5, 100, driveSubsystem));

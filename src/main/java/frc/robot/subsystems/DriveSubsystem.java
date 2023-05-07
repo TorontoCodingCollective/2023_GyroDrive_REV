@@ -146,11 +146,6 @@ public class DriveSubsystem extends SubsystemBase {
         // Send the offset to the navX in order to have the
         // compass on the dashboard appear at the correct heading.
         navXGyro.setAngleAdjustment(gyroHeadingOffset);
-
-        // FIXME: (low) Hack
-        if (heading == 0) {
-            resetEncoders();
-        }
     }
 
     /**

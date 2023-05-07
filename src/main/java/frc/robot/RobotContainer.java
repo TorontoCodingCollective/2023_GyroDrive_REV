@@ -7,7 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.OperatorInputConstants;
-import frc.robot.commands.auto.DriveForwardAutoCommand;
+import frc.robot.commands.auto.AutoCommand_DriveForward;
 import frc.robot.commands.drive.DefaultDriveCommand;
 import frc.robot.subsystems.DriveSubsystem;
 
@@ -53,7 +53,8 @@ public class RobotContainer {
             return new InstantCommand();
 
         case DRIVE_FORWARD:
-            return new DriveForwardAutoCommand(
+            return new AutoCommand_DriveForward(
+                operatorInput.getSelectedWaitTime(),
                 driveSubsystem);
 
         default:

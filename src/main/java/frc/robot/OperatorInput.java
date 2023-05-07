@@ -66,10 +66,11 @@ public class OperatorInput extends SubsystemBase {
         new Trigger(() -> driverController.getStartButton() || operatorController.getStartButton())
             .onTrue(new CancelCommand(driveSubsystem));
 
-        // Gyro Reset
+        // Gyro and Encoder Reset
         new Trigger(() -> driverController.getBackButton())
             .onTrue(new InstantCommand(() -> {
                 driveSubsystem.resetGyro();
+                driveSubsystem.resetEncoders();
             }));
 
         // Configure the DPAD to drive one meter on a heading
